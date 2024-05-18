@@ -32,8 +32,10 @@ const ProductsList = (
   useEffect(() => {
     if (searchValue) {
       const filtered = products.filter(product => 
-        product.description.toLowerCase().includes(searchValue.toLowerCase())
+        product.description.toLowerCase().includes(searchValue.toLowerCase()) ||
+        product.name.toLowerCase().includes(searchValue.toLowerCase())
       );
+      
       setFilteredProducts(filtered);
     } else {
       setFilteredProducts(products);
