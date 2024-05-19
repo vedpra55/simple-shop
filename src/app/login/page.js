@@ -1,10 +1,13 @@
 "use client"
 
 import { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/config/firebase';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth, firestore } from '@/config/firebase'; 
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -33,6 +36,39 @@ export default function LoginPage() {
 
     }
   };
+
+  const loginWithGoogle = async (e) => {
+    try {
+      e.preventDefault();
+      setLoading(true)
+      const googleProvider = new GoogleAuthProvider()
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      const db = firestore
+  
+      const userDoc = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userDoc);
+  
+      if (!userSnap.exists()) {
+ 
+        await setDoc(userDoc, {
+          displayName: user.displayName,
+          email: user.email,
+          uid: user.uid,
+          virtualBalance: 1000,
+        });
+      }
+      setLoading(false)
+      router.push("/")
+    } catch (error) {
+      console.error('Error logging in with Google:', error);
+      toast.error("Something goes wrong")
+      setLoading(false)
+    }
+
+  };
+  
+  
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -66,6 +102,9 @@ export default function LoginPage() {
             {loading ? "Wait.." : "Login"}
           </button>
         </div>
+        <button className='w-full flex justify-center' onClick={loginWithGoogle}>
+          <img className='w-56 h-20' src='https://community.androidbuilder.in/uploads/default/original/2X/a/a2d524e6afad43ec761bd4325c04379c59726241.jpeg' />
+        </button>
         <div className=' underline text-center mt-5 w-full'>
           <Link className='' href={"/signup"}>Create Account</Link>
         </div>
